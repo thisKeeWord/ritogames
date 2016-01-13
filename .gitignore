@@ -1,3 +1,4 @@
 node_modules
 keys.js
 build/bundle.js
+build/bower_components
