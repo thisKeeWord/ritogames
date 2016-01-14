@@ -4,7 +4,7 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 // var sendingForm = require('./../client/champ.jsx');
-var gamestats = require('./../gameOverview/gameOverviewController.js');
+var history = require('./../gameOverview/leagueHistoryController.js');
 var mongoURI = 'mongodb://localhost/league';
 mongoose.connect(mongoURI);
 
@@ -15,14 +15,14 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, './../build')));
 
 
-app.get('/', gamestats.game);
+app.get('/', history.game);
 
 app.get('/stats', function(req, res) {
   // res.setHeader('Content-Type', 'text/html');
 	res.sendFile(__dirname + '/index.html');
 })
 
-app.post('/stats', gamestats.results)
+app.post('/stats', history.results);
 
 
 app.listen(3000);

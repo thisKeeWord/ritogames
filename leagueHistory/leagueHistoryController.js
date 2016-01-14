@@ -3,6 +3,7 @@ var champion = require('champion');
 var Champ = require('./champStatsModel.js');
 var Game = require('./gameOverviewModel.js');
 var Match = require('./matchStatsModel.js');
+var User = require('./summonerInfoModel.js');
 var keys = require('./../keys.js');
 var matchUrl = 'https://na.api.pvp.net/api/lol/na/v2.2/matchlist/by-summoner/' + keys.summonerId + '?' + keys.key;
 var champUrl = 'https://na.api.pvp.net/api/lol/na/v1.3/stats/by-summoner/' + keys.summonerId + '/ranked?season=';
@@ -61,6 +62,7 @@ function results(req, res, next) {
     if (error) return console.error(error);
     if (!search || search.season !== toCheck.season || (!toCheck.championId && !toCheck.season)) {
       request(champUrl + toCheck.season + '&' + keys.key, function(error, champStat) {
+        if (error) return console.error(error);
         var champStatis = JSON.parse(champStat.body).champions;
         // res.send(champStatis);
         for (var i = 0; i < champStatis.length; i++) {

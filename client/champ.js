@@ -24,8 +24,9 @@ var OutForm = React.createClass({
   handle: function(e) {
     e.preventDefault();
     var data = {
+      userId: React.findDOMNode(this.refs.userId).value,
       champion: React.findDOMNode(this.refs.champion).value,
-      season: React.findDOMNode(this.refs.season).value,
+      season: React.findDOMNode(this.refs.season).value
     };
     var that = this;
     this.post(data).done(function(res) {
@@ -36,6 +37,7 @@ var OutForm = React.createClass({
   render: function() {
     return (
       <form id="league-form" onSubmit={this.handle}>
+        IGN: <input type="text" name="userId" ref="userId" /><br />
         Champion name: <input type="text" name="champion" ref="champion" />&nbsp;&nbsp;&nbsp;&nbsp;
         Season: <input type="text" name="season" ref="season" />
         <input type="submit" className="hidden" />
@@ -83,6 +85,7 @@ var ResToDisp = React.createClass({
   console.log('front-end stuff now', this.props.data);
     return (
       <li className="list-group-item" id="RtoD">
+        <strong>IGN: {this.props.data.userId}</strong>
         <strong>champion: {this.props.data.champion}</strong>
         <p>champion ID: {this.props.data.championId}</p>
         <p>season: {this.props.data.season}</p>
