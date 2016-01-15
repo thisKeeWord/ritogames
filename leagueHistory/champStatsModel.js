@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var champStatsSchema = {
+  userName: { type: String, required: true },
   champion: { type: String, required: true },
   championId: { type: Number, required: true },
   season: { type: String, required: true },

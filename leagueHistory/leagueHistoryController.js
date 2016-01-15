@@ -6,16 +6,19 @@ var Match = require('./matchStatsModel.js');
 var User = require('./summonerInfoModel.js');
 var keys = require('./../keys.js');
 var matchUrl = 'https://na.api.pvp.net/api/lol/na/v2.2/matchlist/by-summoner/' + keys.summonerId + '?' + keys.key;
-var champUrl = 'https://na.api.pvp.net/api/lol/na/v1.3/stats/by-summoner/' + keys.summonerId + '/ranked?season=';
+var champUrl = 'https://na.api.pvp.net/api/lol/na/v1.3/stats/by-summoner/';
+var userUrl = 'https://na.api.pvp.net/api/lol/na/v1.4/summoner/by-name/';
 
-var statistics = {
+var History = {
   game: game,
   results: results
 };
 
 
 function game(req, res, next) {
+
   var storeLength = {};
+
   Game.find(storeLength, function(error, found) {
     if (error) return console.error(error);
     if (!found.length) {
@@ -23,13 +26,13 @@ function game(req, res, next) {
         if (error) return console.error(error);
         var result = JSON.parse(data.body);
         storeLength = result.matches.length;
-        // if (result.matches.length < )
+
         for (var i = 0; i < result.matches.length; i++) {
           Game.create(result.matches[i], function(error, gameSaved) {
             if (error) return console.error(error);
-            // console.log(gameLogged)
           });
         }
+
         return res.redirect('/stats');
       });
     }
@@ -37,12 +40,13 @@ function game(req, res, next) {
       request(matchUrl, function(error, data) {
         if (error) return console.error(error);
         var result = JSON.parse(data.body);
+
         for (var i = found.length; i < result.matches.length; i++) {
           Game.create(result.matches[i], function(error, gameLogged) {
             if (error) return console.error(error);
-            // console.log(gameLogged)
           });
         }
+
         return res.redirect('/stats');
       });
     }
@@ -53,24 +57,52 @@ function results(req, res, next) {
 
   var champCheck = {};
   var toCheck = {
+    userName: req.body.userName,
     championId: parseInt(champion(req.body.champion), 10),
     season: req.body.season
   };
-  console.log('in results', req.body)
-  console.log(toCheck.championId);
-  Champ.findOne(toCheck, function(error, search) {
+
+  User.findOne(toCheck.userName, function(error, userFound) {
     if (error) return console.error(error);
-    if (!search || search.season !== toCheck.season || (!toCheck.championId && !toCheck.season)) {
-      request(champUrl + toCheck.season + '&' + keys.key, function(error, champStat) {
+    if (!userFound) {
+      request(userUrl + toCheck.userName + '?' + keys.key, function(error, userResult) {
+        if (error) return console.error('in user request', error);
+        var userStats = JSON.parse(userResult.body);
+        for(var key in userStats) {
+          var gotId = userStats[key]["id"];
+          User.create({ userName: toCheck.userName, userId: gotId }, function(error, userMade) {
+            if (error) return console.error('in create user', error);
+            return champStuff(toCheck, userMade);
+          });
+        }
+      });
+    }
+    else if(userFound) {
+      return champStuff(toCheck, userFound)
+    }
+    else {
+      return res.send('unknown error');
+    }
+  });
+}
+
+
+
+function champStuff(infos, user) {
+  Champ.findOne(infos, function(error, search) {
+    if (error) return console.error(error);
+    if (!search || search.season !== infos.season || (!infos.championId && !infos.season)) {
+      request(champUrl + user.userId + '/ranked?season=' + infos.season + '&' + keys.key, function(error, champStat) {
         if (error) return console.error(error);
         var champStatis = JSON.parse(champStat.body).champions;
-        // res.send(champStatis);
+        console.log('infos', infos);
         for (var i = 0; i < champStatis.length; i++) {
-          if (champStatis[i].id === toCheck.championId) {
+          if (champStatis[i].id === infos.championId) {
             Champ.create({
-              champion: req.body.champion,
+              userName: infos.userName,
+              champion: infos.champion,
               championId: champStatis[i].id,
-              season: req.body.season,
+              season: infos.season,
               totalDeathsPerSession: champStatis[i].stats["totalDeathsPerSession"],
               totalSessionsPlayed: champStatis[i].stats["totalSessionsPlayed"],
               totalDamageTaken: champStatis[i].stats["totalDamageTaken"],
@@ -102,16 +134,14 @@ function results(req, res, next) {
         }
       });
     }
-    else if (search.season === toCheck.season && search.champion === req.body.champion) {
+    else if (search.season === infos.season && search.champion === infos.champion) {
       return res.send(search);
     }
     else {
       return res.send("You haven't played this champ for the season specified");
     }
-  })
+  });
 }
 
 
-
-
-module.exports = statistics;
+module.exports = History;
