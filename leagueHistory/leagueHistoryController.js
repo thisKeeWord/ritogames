@@ -63,15 +63,13 @@ function results(req, res, next) {
     season: req.body.season
   };
 
-  console.log(toCheck.userName)
-
   User.findOne({ userName: toCheck.userName }, function(error, userFound) {
     if (error) return console.error(error);
     console.log(userFound);
     if (!userFound || (userFound.userName !== toCheck.userName)) {
       request(userUrl + toCheck.userName + '?' + keys.key, function(error, userResult) {
         console.log('about to make another request for user');
-        if (error) return console.error('in user request', error);
+        if (error) return res.redirect('/stats');
         var userStats = JSON.parse(userResult.body);
         for(var key in userStats) {
           var gotId = userStats[key]["id"];
@@ -83,7 +81,6 @@ function results(req, res, next) {
       });
     }
     else if(userFound && userFound.userName === toCheck.userName) {
-      console.log('got dat shit');
       champStuff(toCheck, userFound, res)
     }
     else {
@@ -99,7 +96,7 @@ function champStuff(infos, user, res) {
     if (error) return console.error(error);
     if (!search || search.season !== infos.season || (!infos.championId && !infos.season)) {
       request(champUrl + user.userId + '/ranked?season=' + infos.season + '&' + keys.key, function(error, champStat) {
-        if (error) return console.error(error);
+        if (error) return res.redirect('/stats');
         var champStatis = JSON.parse(champStat.body).champions;
         console.log('infos', infos);
         for (var i = 0; i < champStatis.length; i++) {
