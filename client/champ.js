@@ -85,7 +85,7 @@ var ResToDisp = React.createClass({
   console.log('front-end stuff now', this.props.data);
     return (
       <li className="list-group-item" id="RtoD">
-        <strong>IGN: {this.props.data.userName}</strong>
+        <strong>IGN: {this.props.data.userName}</strong><br />
         <strong>champion: {this.props.data.champion}</strong>
         <p>champion ID: {this.props.data.championId}</p>
         <p>season: {this.props.data.season}</p>

@@ -58,27 +58,33 @@ function results(req, res, next) {
   var champCheck = {};
   var toCheck = {
     userName: req.body.userName,
+    champion: req.body.champion,
     championId: parseInt(champion(req.body.champion), 10),
     season: req.body.season
   };
 
-  User.findOne(toCheck.userName, function(error, userFound) {
+  console.log(toCheck.userName)
+
+  User.findOne({ userName: toCheck.userName }, function(error, userFound) {
     if (error) return console.error(error);
-    if (!userFound) {
+    console.log(userFound);
+    if (!userFound || (userFound.userName !== toCheck.userName)) {
       request(userUrl + toCheck.userName + '?' + keys.key, function(error, userResult) {
+        console.log('about to make another request for user');
         if (error) return console.error('in user request', error);
         var userStats = JSON.parse(userResult.body);
         for(var key in userStats) {
           var gotId = userStats[key]["id"];
           User.create({ userName: toCheck.userName, userId: gotId }, function(error, userMade) {
             if (error) return console.error('in create user', error);
-            return champStuff(toCheck, userMade);
+            champStuff(toCheck, userMade, res);
           });
         }
       });
     }
-    else if(userFound) {
-      return champStuff(toCheck, userFound)
+    else if(userFound && userFound.userName === toCheck.userName) {
+      console.log('got dat shit');
+      champStuff(toCheck, userFound, res)
     }
     else {
       return res.send('unknown error');
@@ -88,7 +94,7 @@ function results(req, res, next) {
 
 
 
-function champStuff(infos, user) {
+function champStuff(infos, user, res) {
   Champ.findOne(infos, function(error, search) {
     if (error) return console.error(error);
     if (!search || search.season !== infos.season || (!infos.championId && !infos.season)) {
