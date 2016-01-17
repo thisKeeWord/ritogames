@@ -24,29 +24,28 @@ function game(req, res, next) {
     if (!found.length) {
       request(matchUrl, function(error, data) {
         if (error) return console.error(error);
-        var result = JSON.parse(data.body);
-        storeLength = result.matches.length;
+        var result = JSON.parse(data.body).matches.reverse();
+        storeLength = result.length;
 
-        for (var i = 0; i < result.matches.length; i++) {
-          Game.create(result.matches[i], function(error, gameSaved) {
+        for (var i = 0; i < result.length; i++) {
+          Game.create(result[i], function(error, gameSaved) {
             if (error) return console.error(error);
           });
         }
-
         return res.redirect('/stats');
       });
     }
     else {
+      console.log(Object.keys(found).length);
       request(matchUrl, function(error, data) {
         if (error) return console.error(error);
-        var result = JSON.parse(data.body);
-
-        for (var i = found.length; i < result.matches.length; i++) {
-          Game.create(result.matches[i], function(error, gameLogged) {
+        var result = JSON.parse(data.body).matches.reverse();
+        for (var i = Object.keys(found).length; i < result.length; i++) {
+          Game.create(result[i], function(error, gameLogged) {
             if (error) return console.error(error);
+            console.log('add ons to game.create', result[i]);
           });
         }
-
         return res.redirect('/stats');
       });
     }
